@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en" class="h-100">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <title>Purikone TL Shifter</title>
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/sticky-footer/">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.0/cash.min.js" integrity="sha512-sgDgZX/GgfD7qSeMjPN/oE9EQgXZJW55FIjdexVT60QerG2gAWhR9QDQEGt3O90Dy9jVcwMWsoTMhLgldIiKXw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.2.3/darkly/bootstrap.min.css" integrity="sha512-YRcmztDXzJQCCBk2YUiEAY+r74gu/c9UULMPTeLsAp/Tw5eXiGkYMPC4tc4Kp1jx/V9xjEOCVpBe4r6Lx6n5dA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Favicons -->
+    <meta name="theme-color" content="#7952b3">
+  </head>
+  <body class="d-flex flex-column h-100">
+    <div class="container">
+      <div class="row mt-5">
+        <h1>Purikone TL Shifter</h1>
+      </div>
+      <div class="row">
+        <div class="col">
+          <h4>Input TL</h4>
+          <textarea class="form-control" id="inputTimeline" rows="30"></textarea>
+        </div>
+        <div class="col">
+          <h4>Configuration Box</h4>
+          <div class="input-group mb-3">
+            <span class="input-group-text">Leftover</span>
+            <input id="shiftingTlNumber" type="number" class="form-control" aria-label="Input Shifting Time" value="0">
+            <span class="input-group-text">secs</span>
+          </div>
+          <div class="input-group mb-3">
+            <button type="button" class="btn btn-primary" id="shiftTl">Shift TL</button>
+          </div>
+          <div class="input-group mb-3">
+            <div class="card text-white bg-info mb-3 w-100">
+              <div class="card-header">Kuri's Note #1</div>
+              <div class="card-body">
+                <h4 class="card-title">About format</h4>
+                <p class="card-text">TL Format that accepted was <br />{minute}{: or .}{second}{space}{description}. <br />Other than that will be rejected / crash lol </p>
+              </div>
+            </div>
+          </div>
+          <div class="input-group mb-3">
+            <div class="card text-white bg-info mb-3 w-100">
+              <div class="card-header">Kuri's Note #2</div>
+              <div class="card-body">
+                <h4 class="card-title">About Shifting Second</h4>
+                <p class="card-text">Input your leftover in second, 1:02 = 62 </p>
+              </div>
+            </div>
+          </div>
+          <div class="input-group mb-3">
+            <div class="card text-white bg-info mb-3 w-100">
+              <div class="card-header">Kuri's Note #3</div>
+              <div class="card-body">
+                <h4 class="card-title">What * in the result TL ?</h4>
+                <p class="card-text">You will not get that TL aka overtime </p>
+              </div>
+            </div>
+          </div>
+          <div class="input-group mb-3">
+            <div class="card text-white bg-info mb-3 w-100">
+              <div class="card-header">Kuri's Note #4</div>
+              <div class="card-body">
+                <h4 class="card-title">Any Question ?</h4>
+                <p class="card-text">Ask on Discord </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <h4>Output TL</h4>
+          <textarea class="form-control" id="outputTimeline" rows="30"></textarea>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript"> 
+		$(function () {
+            $("#shiftTl").on("click", function () {
+                let inputArray = $("#inputTimeline").val().replace(/\r\n/g, "\n").split("\n");
+                let outputArray = [];
+                let shiftTime = 90 - parseInt($("#shiftingTlNumber").val());
+
+                let arrayLog = []
+                let logObj = {
+                    "Kuri Data Log": arrayLog
+                }
+
+                inputArray.forEach(function (item, index) {
+                    if (item) {
+                        let processedLine = ""
+                        let newMin = ""
+                        let newSecs = ""
+                        let finalText = ""
+
+                        let splitString = ":"
+
+                        let leftText = item.substr(0, item.indexOf(" "))
+                        let rightText = item.substr(item.indexOf(" ") + 1)
+
+                        //Check Split
+                        if (leftText.indexOf(".") !== -1) {
+                            splitString = "."
+                        }
+
+                        let min = parseInt(leftText.substr(0, leftText.indexOf(splitString)))
+                        let secs = parseInt(leftText.substr(leftText.indexOf(splitString) + 1))
+
+                        let totalSecs = (min * 60) + secs
+                        let reducedTotalSecs = totalSecs - shiftTime
+
+                        if (reducedTotalSecs < 0) {
+                            processedLine = 1
+                            item = "* " + item
+                            outputArray.push(item)
+                        }
+                        else if (leftText.indexOf(splitString) == -1) {
+                            processedLine = 2
+                            outputArray.push(item)
+                        }
+                        else {
+                            processedLine = 3
+                            newMin = String(Math.floor((reducedTotalSecs / 60)))
+                            newSecs = String(reducedTotalSecs - (newMin * 60))
+                            finalText = newMin.padStart(2, "0") + splitString + newSecs.padStart(2, "0") + " " + rightText
+                            outputArray.push(finalText)
+                        }
+
+                        let obj = {
+                            "Full Text" : item,
+                            "Left Text": leftText,
+                            "Right Text": rightText,
+                            "Shift Time": shiftTime,
+                            "Separator": splitString,
+                            "Min": min,
+                            "Secs": secs,
+                            "Total Secs": totalSecs,
+                            "Reduced Total Secs": reducedTotalSecs,
+                            "Processed Line" : processedLine,
+                            "New Min" : newMin,
+                            "New Secs" : newSecs,
+                            "Final Text" : finalText
+                        }
+                        
+                        arrayLog.push(obj)
+                    }
+                    else {
+                        outputArray.push(item)
+                    }
+                });
+
+                console.log(logObj)
+
+                $("#outputTimeline").val(outputArray.join("\n"))
+
+            });
+        })
+    
+			</script>
+  </body>
+</html>
